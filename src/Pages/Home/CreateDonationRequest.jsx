@@ -4,10 +4,13 @@ import { MdBloodtype } from "react-icons/md";
 import { motion } from "framer-motion";
 import useAuth from "../../hooks/useAuth";
 import useAxiosSecure from "../../hooks/useAxiosSecure";
+import Swal from "sweetalert2";
+import { Navigate, useNavigate } from "react-router";
 
 const CreateDonationRequest = () => {
   const axiosSecure = useAxiosSecure();
   const { user } = useAuth();
+  const navigate = useNavigate();
 
   const {
     register,
@@ -29,24 +32,49 @@ const CreateDonationRequest = () => {
     },
   });
 
-  const onSubmit = (data) => {
-    console.log("Donation Request:", data);
+const onSubmit = async (data) => {
+  const result = await Swal.fire({
+    title: "Submit Donation Request?",
+    text: "Please confirm that you want to submit this blood donation request.",
+    icon: "question",
+    showCancelButton: true,
+    confirmButtonColor: "#e51e25",
+    cancelButtonColor: "#6b7280",
+    confirmButtonText: "Yes, Submit",
+    cancelButtonText: "Cancel",
+  });
 
-    axiosSecure
-      .post("/donation_requests", {
-        ...data,
-        status: "Pending",
-      })
-      .then((response) => {
-        console.log(
-          "Donation request submitted successfully:",
-          response.data,
-        );
-      })
-      .catch((error) => {
-        console.error("Error submitting donation request:", error);
+  // User clicked Cancel
+  if (!result.isConfirmed) return;
+
+  try {
+    const response = await axiosSecure.post("/donation_requests", {
+      ...data,
+      status: "Pending",
+    });
+
+    if (response.data.insertedId) {
+      Swal.fire({
+        title: "Request Submitted!",
+        text: "Your donation request has been submitted successfully.",
+        icon: "success",
+        confirmButtonColor: "#e51e25",
       });
-  };
+      navigate("/dashboard/my-donation-requests");
+    }
+  } catch (error) {
+    console.error("Error submitting donation request:", error);
+
+    Swal.fire({
+      title: "Submission Failed!",
+      text:
+        error.response?.data?.message ||
+        "Something went wrong while submitting your donation request.",
+      icon: "error",
+      confirmButtonColor: "#e51e25",
+    });
+  }
+};
 
   return (
     <motion.div

@@ -341,30 +341,45 @@ const DonationModal = ({
 }) => {
   const [loading, setLoading] = useState(false);
 
-  const handleConfirmDonation = async () => {
-    console.log(request._id)
-    try {
-      setLoading(true);
+ const handleConfirmDonation = async () => {
+  console.log(request._id);
 
-      const updateInfo = {
-        status: "In Progress",
+  try {
+    setLoading(true);
+
+    // 1. Change donation request status
+    const updateInfo = {
+      status: "In Progress",
+    };
+
+    const statusRes = await axiosSecure.patch(
+      `/update_status/${request._id}`,
+      updateInfo
+    );
+
+    // 2. Add donor information to inprogress_requests
+    if (statusRes.data.modifiedCount) {
+      const inProgressData = {
+        donorName: user?.displayName,
+        donorEmail: user?.email,
       };
 
-      const res = await axiosSecure.patch(
-        `update_status/${request._id}`,
-        updateInfo
+      const postRes = await axiosSecure.post(
+        "/inprogress_requests",
+        inProgressData
       );
 
-      if (res.data.modifiedCount) {
+      if (postRes.data.insertedId) {
         onClose();
         window.location.reload();
       }
-    } catch (error) {
-      console.error("Donation failed:", error);
-    } finally {
-      setLoading(false);
     }
-  };
+  } catch (error) {
+    console.error("Donation failed:", error);
+  } finally {
+    setLoading(false);
+  }
+};
 
   return (
     <motion.div

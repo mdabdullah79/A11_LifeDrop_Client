@@ -2,11 +2,18 @@ import { useQuery } from "@tanstack/react-query";
 import React, { useState } from "react";
 import useAuth from "../../hooks/useAuth";
 import useAxiosSecure from "../../hooks/useAxiosSecure";
+import {
+  MdFileDownloadDone,
+  MdOutlineCancel,
+  MdOutlineDeleteOutline,
+} from "react-icons/md";
+import { FaEdit } from "react-icons/fa";
+import Swal from "sweetalert2";
 
 const MyDonationRequests = () => {
   const { user } = useAuth();
   const axiosSecure = useAxiosSecure();
-  const { data: requests = [] } = useQuery({
+  const { data: requests = [],refetch} = useQuery({
     queryKey: ["donation_requests", user?.email],
     enabled: !!user?.email,
     queryFn: async () => {
@@ -16,35 +23,54 @@ const MyDonationRequests = () => {
   });
   const [statusFilter, setStatusFilter] = useState("All Status");
 
-  const donationrequests = [
-    {
-      id: 1,
-      requester: "Mahin",
-      recipient: "Rahim Ahmed",
-      location: "Chattogram, Panchlaish",
-      blood: "O+",
-      date: "12 Aug",
-      status: "Pending",
-    },
-    {
-      id: 2,
-      requester: "Nusrat",
-      recipient: "Nusrat Jahan",
-      location: "Dhaka, Dhanmondi",
-      blood: "A+",
-      date: "13 Aug",
-      status: "In Progress",
-    },
-    {
-      id: 3,
-      requester: "Karim",
-      recipient: "Karim Hasan",
-      location: "Sylhet, Zindabazar",
-      blood: "B-",
-      date: "15 Aug",
-      status: "Done",
-    },
-  ];
+  const handleDelete = async (id) => {
+    const result = await Swal.fire({
+      title: "Are you sure?",
+      text: "This donation request will be permanently deleted.",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonColor: "#e51e25",
+      cancelButtonColor: "#6b7280",
+      confirmButtonText: "Yes, delete it!",
+      cancelButtonText: "Cancel",
+    });
+
+    if (!result.isConfirmed) return;
+
+    try {
+      const res = await axiosSecure.delete(`/donation_requests/${id}`);
+      console.log("Delete response:", res.data);
+
+      if (res.data.deletedCount === 1) {
+        await Swal.fire({
+          title: "Deleted!",
+          text: "Donation request has been deleted successfully.",
+          icon: "success",
+          confirmButtonColor: "#e51e25",
+        });
+        refetch();
+      } else {
+        Swal.fire({
+          title: "Not Found!",
+          text: "The donation request could not be found.",
+          icon: "warning",
+          confirmButtonColor: "#e51e25",
+        });
+      }
+    } catch (error) {
+      console.error("Delete failed:", error);
+      console.error("Server response:", error.response?.data);
+
+      Swal.fire({
+        title: "Error!",
+        text:
+          error.response?.data?.message ||
+          "Failed to delete the donation request.",
+        icon: "error",
+        confirmButtonColor: "#e51e25",
+      });
+    }
+  };
 
   const filteredRequests =
     statusFilter === "All Status"
@@ -174,21 +200,43 @@ const MyDonationRequests = () => {
                   {/* Action */}
 
                   <td className="px-3 py-4">
-                    {request.status === "In Progress" ? (
+                    <div className="flex items-center gap-1">
+                      {/* In Progress Actions */}
+                      {request.status === "In Progress" && (
+                        <>
+                          <button
+                            className="flex h-9 w-9 items-center justify-center rounded-lg bg-green-100 text-green-600 transition hover:bg-green-200"
+                            title="Complete"
+                          >
+                            <MdFileDownloadDone size={18} />
+                          </button>
+
+                          <button
+                            className="flex h-9 w-9 items-center justify-center rounded-lg bg-red-100 text-red-600 transition hover:bg-red-200"
+                            title="Cancel"
+                          >
+                            <MdOutlineCancel size={18} />
+                          </button>
+                        </>
+                      )}
+
+                      {/* Edit */}
                       <button
-                        onClick={() => console.log("Update:", request)}
-                        className="rounded-lg bg-green-100 px-4 py-2 text-[10px] font-semibold text-green-600 transition hover:bg-green-200"
+                        className="flex h-9 w-9 items-center justify-center rounded-lg bg-blue-100 text-blue-600 transition hover:bg-blue-200"
+                        title="Edit"
                       >
-                        Update
+                        <FaEdit size={16} />
                       </button>
-                    ) : (
+
+                      {/* Delete */}
                       <button
-                        onClick={() => console.log("View:", request)}
-                        className="rounded-lg bg-red-100 px-4 py-2 text-[10px] font-semibold text-red-600 transition hover:bg-red-200"
+                        onClick={() => handleDelete(request._id)}
+                        className="flex h-9 w-9 items-center justify-center rounded-lg bg-gray-100 text-gray-600 transition hover:bg-red-100 hover:text-red-600"
+                        title="Delete"
                       >
-                        View
+                        <MdOutlineDeleteOutline size={19} />
                       </button>
-                    )}
+                    </div>
                   </td>
                 </tr>
               ))
