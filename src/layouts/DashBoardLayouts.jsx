@@ -54,11 +54,15 @@ const DashBoardLayouts = () => {
         ]
       : []),
 
-    {
-      name: "Blood Requests",
-      icon: MdAssignment,
-      path: "/dashboard/blood-requests",
-    },
+    ...(role?.role === "Admin"
+      ? [
+          {
+            name: "Blood Requests",
+            icon: MdAssignment,
+            path: "/dashboard/blood-requests",
+          },
+        ]
+      : []),
     {
       name: "Funding",
       icon: MdAccountBalanceWallet,
@@ -111,7 +115,6 @@ const DashBoardLayouts = () => {
 
   return (
     <div className="min-h-screen bg-[#f8f9fb] text-[#071b3a]">
-
       {/* ================= MOBILE HEADER ================= */}
 
       <motion.div
@@ -172,7 +175,6 @@ const DashBoardLayouts = () => {
         `}
       >
         <div className="flex h-full flex-col px-4 py-7">
-
           {/* ================= LOGO ================= */}
 
           <NavLink to="/" onClick={() => setSidebarOpen(false)}>
@@ -195,9 +197,7 @@ const DashBoardLayouts = () => {
               <div>
                 <h2 className="text-lg font-bold">LifeDrop</h2>
 
-                <p className="text-[10px] text-gray-400">
-                  BLOOD DONATION
-                </p>
+                <p className="text-[10px] text-gray-400">BLOOD DONATION</p>
               </div>
             </motion.div>
           </NavLink>
@@ -254,9 +254,7 @@ const DashBoardLayouts = () => {
                             <Icon
                               size={18}
                               className={
-                                isActive
-                                  ? "text-red-500"
-                                  : "text-[#426080]"
+                                isActive ? "text-red-500" : "text-[#426080]"
                               }
                             />
                           </motion.div>
@@ -432,9 +430,7 @@ const ActivityItem = ({ children }) => {
     >
       <span className="absolute -left-[5px] top-1 h-2 w-2 rounded-full bg-red-600" />
 
-      <div className="text-sm leading-6">
-        {children}
-      </div>
+      <div className="text-sm leading-6">{children}</div>
     </motion.div>
   );
 };

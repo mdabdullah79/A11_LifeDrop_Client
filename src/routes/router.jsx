@@ -15,6 +15,8 @@ import AdminRoute from "./AdminRoute";
 import ErrorPage from "../Pages/Home/ErrorPage";
 import MyDonationRequests from "../Pages/Home/MyDonationRequests";
 import SearchDonors from "../Pages/Home/SearchDonors";
+import BloodRequests from "../Pages/Home/BloodRequests";
+import DonationRequestDetails from "../Pages/Home/DonationRequestDetails";
 
 export const router = createBrowserRouter([
   {
@@ -29,6 +31,14 @@ export const router = createBrowserRouter([
       {
         path:"/search_donors",
         Component:SearchDonors,
+      },
+      {
+        path:"/blood_requests",
+        Component:BloodRequests
+      },
+      {
+        path:"/blood_requests_details/:id",
+        Component:DonationRequestDetails,
       }
     ],
   },

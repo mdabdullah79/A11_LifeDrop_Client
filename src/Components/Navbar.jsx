@@ -4,7 +4,7 @@ import useAuth from "../hooks/useAuth";
 import { NavLink } from "react-router";
 
 const Navbar = () => {
-  const { user,logoutUser } = useAuth();
+  const { user, logoutUser } = useAuth();
 
   const handleLogout = () => {
     logoutUser()
@@ -63,9 +63,11 @@ const Navbar = () => {
       </div>
       <div className="navbar-center hidden lg:flex">
         <ul className="menu menu-horizontal px-1">
-          <li>
-            <a>Item 1</a>
-          </li>
+          <NavLink to="/blood_requests">
+            <li>
+              <a>Blood Requests</a>
+            </li>
+          </NavLink>
           <li>
             <details>
               <summary>Parent</summary>
@@ -95,7 +97,11 @@ const Navbar = () => {
               <div className="w-10 rounded-full">
                 <img
                   alt="Tailwind CSS Navbar component"
-                  src={user.photoURL ? user.photoURL : "https://placeimg.com/80/80/people"}
+                  src={
+                    user.photoURL
+                      ? user.photoURL
+                      : "https://placeimg.com/80/80/people"
+                  }
                 />
               </div>
             </div>
@@ -110,15 +116,19 @@ const Navbar = () => {
                 </a>
               </li>
               <li>
-                <NavLink to="/dashboard"><a>Dashboard</a></NavLink>
+                <NavLink to="/dashboard">
+                  <a>Dashboard</a>
+                </NavLink>
               </li>
               <li>
-                <a onClick={handleLogout} >Logout</a>
+                <a onClick={handleLogout}>Logout</a>
               </li>
             </ul>
           </div>
         ) : (
-          <NavLink to="/login"><a className="btn bg-red-500 text-white">Login</a></NavLink>
+          <NavLink to="/login">
+            <a className="btn bg-red-500 text-white">Login</a>
+          </NavLink>
         )}
       </div>
     </div>

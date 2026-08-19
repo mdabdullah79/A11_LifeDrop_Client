@@ -1,8 +1,10 @@
 import React, { useState } from "react";
 import { MdPerson, MdEdit, MdSave } from "react-icons/md";
 import { motion } from "framer-motion";
+import useAuth from "../../hooks/useAuth";
 
 const Profile = () => {
+  const { user } = useAuth();
   const [isEditing, setIsEditing] = useState(false);
 
   const [profile, setProfile] = useState({
@@ -113,32 +115,101 @@ const Profile = () => {
 
         <div className="px-5 pb-10 sm:px-8">
           {/* ================= PROFILE IMAGE ================= */}
-
-          <motion.div
-            initial={{ opacity: 0, y: -25, scale: 0.7 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            transition={{
-              duration: 0.5,
-              delay: 0.25,
-              type: "spring",
-              stiffness: 180,
-            }}
-            className="-mt-1"
-          >
+          <div className="relative h-[106px] w-[106px]">
+            {/* Animated outer ring */}
             <motion.div
-              whileHover={{
-                scale: 1.08,
-                rotate: 3,
+              animate={{ rotate: 360 }}
+              transition={{
+                duration: 6,
+                repeat: Infinity,
+                ease: "linear",
+              }}
+              className="
+      absolute
+      inset-0
+      rounded-full
+      bg-[conic-gradient(from_0deg,#ef4444,#fca5a5,#fee2e2,#ef4444)]
+      p-[3px]
+    "
+            >
+              {/* White gap between ring and image */}
+              <div className="h-full w-full rounded-full bg-white p-[3px]">
+                <div className="h-full w-full rounded-full bg-red-100" />
+              </div>
+            </motion.div>
+
+            {/* Profile Image */}
+            <motion.div
+              initial={{
+                opacity: 0,
+                y: -25,
+                scale: 0.7,
+              }}
+              animate={{
+                opacity: 1,
+                y: 0,
+                scale: 1,
               }}
               transition={{
+                duration: 0.5,
+                delay: 0.25,
                 type: "spring",
-                stiffness: 300,
+                stiffness: 180,
               }}
-              className="flex h-[86px] w-[86px] items-center justify-center rounded-full border-4 border-white bg-red-100 shadow-md"
+              whileHover={{
+                scale: 1.06,
+              }}
+              className="
+      absolute
+      left-1/2
+      top-1/2
+      flex
+      h-[92px]
+      w-[92px]
+      -translate-x-1/2
+      -translate-y-1/2
+      items-center
+      justify-center
+      overflow-hidden
+      rounded-full
+      border-4
+      border-white
+      bg-red-100
+      shadow-[0_8px_25px_rgba(229,30,37,0.25)]
+    "
             >
-              <MdPerson className="text-[52px] text-[#49317c]" />
+              <img
+                src={user.photoURL}
+                alt={user.displayName || "Profile"}
+                className="h-full w-full object-cover"
+              />
             </motion.div>
-          </motion.div>
+
+            {/* Small online indicator */}
+            <motion.span
+              animate={{
+                scale: [1, 1.15, 1],
+              }}
+              transition={{
+                duration: 1.8,
+                repeat: Infinity,
+                ease: "easeInOut",
+              }}
+              className="
+      absolute
+      bottom-1
+      right-1
+      z-10
+      h-5
+      w-5
+      rounded-full
+      border-[3px]
+      border-white
+      bg-green-500
+      shadow-sm
+    "
+            />
+          </div>
 
           {/* ================= USER INFORMATION ================= */}
 
@@ -152,12 +223,10 @@ const Profile = () => {
             className="mt-4"
           >
             <h2 className="text-2xl font-bold text-[#071b3a]">
-              {profile.name}
+              {user.displayName}
             </h2>
 
-            <p className="mt-1 text-xs text-[#466383]">
-              Donor · Active member
-            </p>
+            <p className="mt-1 text-xs text-[#466383]">Donor · Active member</p>
           </motion.div>
 
           {/* ================= FORM ================= */}
@@ -203,16 +272,7 @@ const Profile = () => {
               value={profile.bloodGroup}
               onChange={handleChange}
               disabled={!isEditing}
-              options={[
-                "A+",
-                "A-",
-                "B+",
-                "B-",
-                "AB+",
-                "AB-",
-                "O+",
-                "O-",
-              ]}
+              options={["A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-"]}
             />
 
             {/* District */}
@@ -277,13 +337,7 @@ const Profile = () => {
    INPUT FIELD
 ========================================= */
 
-const InputField = ({
-  label,
-  name,
-  value,
-  onChange,
-  disabled,
-}) => {
+const InputField = ({ label, name, value, onChange, disabled }) => {
   return (
     <motion.div
       variants={{
@@ -338,14 +392,7 @@ const InputField = ({
    SELECT FIELD
 ========================================= */
 
-const SelectField = ({
-  label,
-  name,
-  value,
-  onChange,
-  disabled,
-  options,
-}) => {
+const SelectField = ({ label, name, value, onChange, disabled, options }) => {
   return (
     <motion.div
       variants={{
