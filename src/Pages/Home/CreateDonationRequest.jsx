@@ -51,6 +51,8 @@ const onSubmit = async (data) => {
     const response = await axiosSecure.post("/donation_requests", {
       ...data,
       status: "Pending",
+      donarName:"",
+      donarEmail:"",
     });
 
     if (response.data.insertedId) {

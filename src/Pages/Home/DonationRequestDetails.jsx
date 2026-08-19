@@ -17,6 +17,7 @@ import {
 } from "react-icons/md";
 import useAxiosSecure from "../../hooks/useAxiosSecure";
 import useAuth from "../../hooks/useAuth";
+import Swal from "sweetalert2";
 
 const DonationRequestDetails = () => {
   const { id } = useParams();
@@ -77,7 +78,6 @@ const DonationRequestDetails = () => {
   return (
     <div className="min-h-screen bg-[#f8f9fb] px-5 pb-12 pt-24 sm:px-8 lg:px-7 lg:pt-7">
       <div className="mx-auto max-w-5xl">
-
         {/* ================= HEADER ================= */}
 
         <motion.div
@@ -111,11 +111,9 @@ const DonationRequestDetails = () => {
           transition={{ duration: 0.6 }}
           className="overflow-hidden rounded-3xl border border-gray-200 bg-white shadow-sm"
         >
-
           {/* ================= TOP BANNER ================= */}
 
           <div className="relative overflow-hidden bg-gradient-to-r from-[#991b1b] via-[#dc2626] to-[#ef4444] px-6 py-8 text-white sm:px-8">
-
             {/* Decorative circles */}
 
             <div className="absolute -right-10 -top-16 h-40 w-40 rounded-full bg-white/10" />
@@ -123,7 +121,6 @@ const DonationRequestDetails = () => {
             <div className="absolute -bottom-20 right-24 h-48 w-48 rounded-full bg-white/5" />
 
             <div className="relative flex flex-col gap-6 sm:flex-row sm:items-center sm:justify-between">
-
               <div>
                 <p className="text-xs font-semibold uppercase tracking-[2px] text-red-100">
                   Blood Needed For
@@ -151,14 +148,12 @@ const DonationRequestDetails = () => {
                   {request.bloodGroup}
                 </span>
               </motion.div>
-
             </div>
           </div>
 
           {/* ================= CONTENT ================= */}
 
           <div className="p-6 sm:p-8">
-
             {/* Status */}
 
             <div className="mb-7 flex items-center justify-between rounded-2xl bg-yellow-50 px-4 py-3">
@@ -178,7 +173,6 @@ const DonationRequestDetails = () => {
             {/* ================= INFORMATION GRID ================= */}
 
             <div className="grid grid-cols-1 gap-5 md:grid-cols-2">
-
               <InfoCard
                 icon={<MdPerson />}
                 title="Recipient Name"
@@ -227,49 +221,57 @@ const DonationRequestDetails = () => {
                 title="Requester Email"
                 value={request.requesterEmail}
               />
-
             </div>
 
             {/* ================= MESSAGE ================= */}
 
             <div className="mt-5 rounded-2xl border border-red-100 bg-[#fffafa] p-5">
-
               <div className="flex items-center gap-2">
                 <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-red-100">
                   <MdDescription className="text-xl text-red-500" />
                 </div>
 
-                <h3 className="font-bold text-[#071b3a]">
-                  Request Message
-                </h3>
+                <h3 className="font-bold text-[#071b3a]">Request Message</h3>
               </div>
 
               <p className="mt-4 text-sm leading-7 text-gray-600">
                 {request.message}
               </p>
-
             </div>
 
             {/* ================= DONATE BUTTON ================= */}
 
             <motion.button
-              whileHover={{ scale: 1.01 }}
+              whileHover={{
+                scale: request.status === "In Progress" ? 1 : 1.01,
+              }}
               whileTap={{ scale: 0.98 }}
-              onClick={handleDonate}
-              disabled={request.status === "Inprogress"}
+              onClick={() => {
+                if (request.status === "In Progress") {
+                  Swal.fire({
+                    title: "Already In Progress",
+                    text: "This donation request has already been accepted by a donor.",
+                    icon: "info",
+                    confirmButtonColor: "#e51e25",
+                    confirmButtonText: "Okay",
+                  });
+                  return;
+                }
+
+                handleDonate();
+              }}
               className={`mt-7 flex w-full items-center justify-center gap-2 rounded-2xl px-5 py-4 text-sm font-bold text-white shadow-lg transition ${
-                request.status === "Inprogress"
-                  ? "cursor-not-allowed bg-gray-400"
+                request.status === "In Progress"
+                  ? "cursor-not-allowed bg-gray-400 shadow-gray-200"
                   : "bg-[#e51e25] shadow-red-200 hover:bg-[#c9181e]"
               }`}
             >
               <MdVolunteerActivism className="text-xl" />
 
-              {request.status === "Inprogress"
+              {request.status === "In Progress"
                 ? "Donation In Progress"
                 : "Donate Now"}
             </motion.button>
-
           </div>
         </motion.div>
       </div>
@@ -290,7 +292,6 @@ const DonationRequestDetails = () => {
   );
 };
 
-
 /* =========================================
    INFORMATION CARD
 ========================================= */
@@ -307,18 +308,14 @@ const InfoCard = ({ icon, title, value, blood }) => {
         }`}
       >
         <span
-          className={`text-xl ${
-            blood ? "text-red-500" : "text-[#466383]"
-          }`}
+          className={`text-xl ${blood ? "text-red-500" : "text-[#466383]"}`}
         >
           {icon}
         </span>
       </div>
 
       <div className="min-w-0">
-        <p className="text-[11px] font-medium text-gray-400">
-          {title}
-        </p>
+        <p className="text-[11px] font-medium text-gray-400">{title}</p>
 
         <p className="mt-1 truncate text-sm font-bold text-[#29476b]">
           {value}
@@ -328,58 +325,57 @@ const InfoCard = ({ icon, title, value, blood }) => {
   );
 };
 
-
 /* =========================================
    DONATION MODAL
 ========================================= */
 
-const DonationModal = ({
-  request,
-  user,
-  axiosSecure,
-  onClose,
-}) => {
+const DonationModal = ({ request, user, axiosSecure, onClose }) => {
   const [loading, setLoading] = useState(false);
 
- const handleConfirmDonation = async () => {
-  console.log(request._id);
+  const handleConfirmDonation = async () => {
+    console.log(request._id);
 
-  try {
-    setLoading(true);
+    try {
+      setLoading(true);
 
-    // 1. Change donation request status
-    const updateInfo = {
-      status: "In Progress",
-    };
-
-    const statusRes = await axiosSecure.patch(
-      `/update_status/${request._id}`,
-      updateInfo
-    );
-
-    // 2. Add donor information to inprogress_requests
-    if (statusRes.data.modifiedCount) {
-      const inProgressData = {
+      const updateInfo = {
+        status: "In Progress",
         donorName: user?.displayName,
         donorEmail: user?.email,
       };
 
-      const postRes = await axiosSecure.post(
-        "/inprogress_requests",
-        inProgressData
+      const statusRes = await axiosSecure.patch(
+        `update_donation_request/${request._id}`,
+        updateInfo,
       );
 
-      if (postRes.data.insertedId) {
+      console.log(statusRes.data);
+
+      if (statusRes.data.modifiedCount > 0) {
+        await Swal.fire({
+          title: "Donation Confirmed!",
+          text: "You have successfully accepted this blood donation request.",
+          icon: "success",
+          confirmButtonColor: "#e51e25",
+          confirmButtonText: "Done",
+        });
+
         onClose();
         window.location.reload();
       }
+    } catch (error) {
+      console.error("Donation failed:", error);
+
+      Swal.fire({
+        title: "Error!",
+        text: "Failed to confirm the donation. Please try again.",
+        icon: "error",
+        confirmButtonColor: "#e51e25",
+      });
+    } finally {
+      setLoading(false);
     }
-  } catch (error) {
-    console.error("Donation failed:", error);
-  } finally {
-    setLoading(false);
-  }
-};
+  };
 
   return (
     <motion.div
@@ -395,11 +391,9 @@ const DonationModal = ({
         transition={{ type: "spring", stiffness: 250 }}
         className="w-full max-w-md overflow-hidden rounded-3xl bg-white shadow-2xl"
       >
-
         {/* Modal Header */}
 
         <div className="relative bg-gradient-to-r from-[#991b1b] to-[#e51e25] px-6 py-6 text-white">
-
           <button
             onClick={onClose}
             className="absolute right-4 top-4 rounded-full p-2 transition hover:bg-white/10"
@@ -409,20 +403,16 @@ const DonationModal = ({
 
           <MdVolunteerActivism className="text-4xl" />
 
-          <h2 className="mt-2 text-xl font-bold">
-            Confirm Donation
-          </h2>
+          <h2 className="mt-2 text-xl font-bold">Confirm Donation</h2>
 
           <p className="mt-1 text-xs text-red-100">
             Your information will be shared with the requester.
           </p>
-
         </div>
 
         {/* Modal Body */}
 
         <div className="space-y-5 p-6">
-
           <div>
             <label className="mb-2 block text-xs font-semibold text-[#071b3a]">
               Donor Name
@@ -453,7 +443,6 @@ const DonationModal = ({
           </div>
 
           <div className="flex gap-3">
-
             <button
               onClick={onClose}
               disabled={loading}
@@ -471,7 +460,6 @@ const DonationModal = ({
 
               {loading ? "Confirming..." : "Confirm Donation"}
             </button>
-
           </div>
         </div>
       </motion.div>

@@ -3,17 +3,19 @@ import React, { useState } from "react";
 import useAuth from "../../hooks/useAuth";
 import useAxiosSecure from "../../hooks/useAxiosSecure";
 import {
+  MdBloodtype,
   MdFileDownloadDone,
   MdOutlineCancel,
   MdOutlineDeleteOutline,
 } from "react-icons/md";
 import { FaEdit } from "react-icons/fa";
 import Swal from "sweetalert2";
+import { NavLink } from "react-router";
 
 const MyDonationRequests = () => {
   const { user } = useAuth();
   const axiosSecure = useAxiosSecure();
-  const { data: requests = [],refetch} = useQuery({
+  const { data: requests = [], refetch } = useQuery({
     queryKey: ["donation_requests", user?.email],
     enabled: !!user?.email,
     queryFn: async () => {
@@ -71,6 +73,52 @@ const MyDonationRequests = () => {
       });
     }
   };
+  const [loading, setLoading] = useState(false);
+
+  const handleStatus = async (id, status) => {
+    console.log(id, status);
+
+    try {
+      setLoading(true);
+
+      const updateInfo = {
+        status: status,
+      };
+
+      const statusRes = await axiosSecure.patch(
+        `update_donation_request/${id}`,
+        updateInfo,
+      );
+
+      console.log(statusRes.data);
+
+      if (statusRes.data.modifiedCount > 0) {
+        await Swal.fire({
+          title: "Status Updated!",
+          text:
+            status === "Done"
+              ? "The donation request has been marked as completed."
+              : "The donation request has been cancelled.",
+          icon: "success",
+          confirmButtonColor: "#e51e25",
+          confirmButtonText: "Done",
+        });
+
+        window.location.reload();
+      }
+    } catch (error) {
+      console.error("Status update failed:", error);
+
+      Swal.fire({
+        title: "Error!",
+        text: "Failed to update the donation request. Please try again.",
+        icon: "error",
+        confirmButtonColor: "#e51e25",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const filteredRequests =
     statusFilter === "All Status"
@@ -103,6 +151,7 @@ const MyDonationRequests = () => {
           <option>Pending</option>
           <option>In Progress</option>
           <option>Done</option>
+          <option>Canceled</option>
         </select>
 
         <span className="text-xs text-[#466383]">
@@ -117,9 +166,8 @@ const MyDonationRequests = () => {
       {/* ================= TABLE ================= */}
 
       <div className="overflow-x-auto rounded-2xl border border-gray-200 bg-white p-5">
-        <table className="w-full min-w-[850px] border-collapse">
-          {/* Header */}
-
+        <table className="w-full min-w-[900px] border-collapse">
+          {/* ================= TABLE HEADER ================= */}
           <thead>
             <tr className="border-b border-gray-200">
               <th className="px-3 pb-4 text-left text-[10px] font-semibold uppercase text-[#466383]">
@@ -147,73 +195,177 @@ const MyDonationRequests = () => {
               </th>
 
               <th className="px-3 pb-4 text-left text-[10px] font-semibold uppercase text-[#466383]">
+                Donor
+              </th>
+              <th className="px-3 pb-4 text-left text-[10px] font-semibold uppercase text-[#466383]">
                 Actions
               </th>
             </tr>
           </thead>
 
-          {/* Body */}
-
+          {/* ================= TABLE BODY ================= */}
           <tbody>
             {filteredRequests.length > 0 ? (
               filteredRequests.map((request) => (
                 <tr
-                  key={request.id}
-                  className="border-b border-gray-100 last:border-0"
+                  key={request._id}
+                  className="border-b border-gray-100 last:border-0 transition hover:bg-gray-50/70"
                 >
-                  {/* Requester */}
+                  {/* ================= REQUESTER ================= */}
+                  <td className="px-3 py-4">
+                    <div>
+                      {/* Requester */}
+                      <p className="text-xs font-semibold text-[#071b3a]">
+                        {request.requesterName}
+                      </p>
 
-                  <td className="px-3 py-4 text-xs text-[#071b3a]">
-                    {request.requesterName}
+                      <p className="mt-0.5 text-[10px] text-gray-400">
+                        {request.requesterEmail}
+                      </p>
+                    </div>
                   </td>
 
-                  {/* Recipient */}
-
-                  <td className="px-3 py-4 text-xs text-[#071b3a]">
-                    {request.recipientName}
+                  {/* ================= RECIPIENT ================= */}
+                  <td className="px-3 py-4">
+                    <p className="text-xs font-semibold text-[#071b3a]">
+                      {request.recipientName}
+                    </p>
                   </td>
 
-                  {/* Location */}
+                  {/* ================= LOCATION ================= */}
+                  <td className="px-3 py-4">
+                    <p className="text-xs font-medium text-[#071b3a]">
+                      {request.district}
+                    </p>
 
-                  <td className="px-3 py-4 text-xs text-[#071b3a]">
-                    {request.district},{request.upazila}
+                    <p className="mt-0.5 text-[10px] text-gray-400">
+                      {request.upazila}
+                    </p>
                   </td>
 
-                  {/* Blood */}
-
-                  <td className=" px-3 py-4 text-xs font-bold text-red-500">
-                    {request.bloodGroup}
+                  {/* ================= BLOOD ================= */}
+                  <td className="px-3 py-4">
+                    <span className="inline-flex items-center rounded-full bg-red-100 px-3 py-1 text-xs font-bold text-red-600">
+                      {request.bloodGroup}
+                    </span>
                   </td>
 
-                  {/* Date */}
+                  {/* ================= DATE ================= */}
+                  <td className="px-3 py-4">
+                    <p className="text-xs font-medium text-[#071b3a]">
+                      {request.donationDate}
+                    </p>
 
-                  <td className="px-3 py-4 text-xs text-[#071b3a]">
-                    {request.donationDate}
+                    <p className="mt-0.5 text-[10px] text-gray-400">
+                      {request.donationTime}
+                    </p>
                   </td>
 
-                  {/* Status */}
-
+                  {/* ================= STATUS ================= */}
                   <td className="px-3 py-4">
                     <StatusBadge status={request.status} />
                   </td>
 
-                  {/* Action */}
+                  {/* ================= DONOR ================= */}
+                  {request.status === "In Progress" ||
+                  request.status === "Done" ? (
+                    // ================= DONOR INFORMATION =================
+                    <div
+                      className={`m-3 rounded-xl border p-2 ${
+                        request.status === "In Progress"
+                          ? "border-blue-100 bg-blue-50"
+                          : "border-green-100 bg-green-50"
+                      }`}
+                    >
+                      <div className="mb-1.5 flex items-center gap-1.5">
+                        <div
+                          className={`h-2 w-2 rounded-full ${
+                            request.status === "In Progress"
+                              ? "bg-blue-500"
+                              : "bg-green-500"
+                          }`}
+                        />
 
+                        {request.status === "In Progress" ? (
+                          <span className="text-[9px] font-bold uppercase tracking-wider text-blue-600">
+                            Donor Assigned
+                          </span>
+                        ) : (
+                          <span className="text-[9px] font-bold uppercase tracking-wider text-green-600">
+                            Donation Completed
+                          </span>
+                        )}
+                      </div>
+
+                      <p className="text-[11px] font-bold text-[#071b3a]">
+                        {request.donorName || "Unknown Donor"}
+                      </p>
+
+                      <p className="mt-0.5 text-[10px] text-gray-500">
+                        {request.donorEmail || "No email available"}
+                      </p>
+                    </div>
+                  ) : request.status === "Pending" ? (
+                    // ================= PENDING =================
+                    <div className="m-3 rounded-xl border border-yellow-100 bg-gradient-to-r from-yellow-50 to-orange-50 p-3">
+                      <div className="flex items-center gap-2">
+                        <div className="flex h-7 w-7 items-center justify-center rounded-full bg-yellow-100">
+                          <span className="text-sm">⏳</span>
+                        </div>
+
+                        <div>
+                          <p className="text-[9px] font-bold uppercase tracking-wider text-yellow-700">
+                            Waiting for Donor
+                          </p>
+
+                          <p className="mt-0.5 text-[10px] text-gray-500">
+                            Your request is waiting for someone to donate.
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  ) : request.status === "Cancelled" ? (
+                    // ================= CANCELLED =================
+                    <div className="m-3 rounded-xl border border-red-100 bg-gradient-to-r from-red-50 to-gray-50 p-3">
+                      <div className="flex items-center gap-2">
+                        <div className="flex h-7 w-7 items-center justify-center rounded-full bg-red-100">
+                          <span className="text-sm">✕</span>
+                        </div>
+
+                        <div>
+                          <p className="text-[9px] font-bold uppercase tracking-wider text-red-600">
+                            Request Cancelled
+                          </p>
+
+                          <p className="mt-0.5 text-[10px] text-gray-500">
+                            This donation request is no longer active.
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  ) : null}
+                  {/* ================= ACTIONS ================= */}
                   <td className="px-3 py-4">
-                    <div className="flex items-center gap-1">
+                    <div className="flex items-center gap-1.5">
                       {/* In Progress Actions */}
                       {request.status === "In Progress" && (
                         <>
+                          {/* Done */}
                           <button
+                            onClick={() => handleStatus(request._id, "Done")}
                             className="flex h-9 w-9 items-center justify-center rounded-lg bg-green-100 text-green-600 transition hover:bg-green-200"
-                            title="Complete"
+                            title="Complete Donation"
                           >
                             <MdFileDownloadDone size={18} />
                           </button>
 
+                          {/* Cancel */}
                           <button
+                            onClick={() =>
+                              handleStatus(request._id, "Cancelled")
+                            }
                             className="flex h-9 w-9 items-center justify-center rounded-lg bg-red-100 text-red-600 transition hover:bg-red-200"
-                            title="Cancel"
+                            title="Cancel Donation"
                           >
                             <MdOutlineCancel size={18} />
                           </button>
@@ -221,12 +373,16 @@ const MyDonationRequests = () => {
                       )}
 
                       {/* Edit */}
-                      <button
-                        className="flex h-9 w-9 items-center justify-center rounded-lg bg-blue-100 text-blue-600 transition hover:bg-blue-200"
-                        title="Edit"
+                      <NavLink
+                        to={`/dashboard/update-donation-request/${request._id}`}
                       >
-                        <FaEdit size={16} />
-                      </button>
+                        <button
+                          className="flex h-9 w-9 items-center justify-center rounded-lg bg-blue-100 text-blue-600 transition hover:bg-blue-200"
+                          title="Edit"
+                        >
+                          <FaEdit size={16} />
+                        </button>
+                      </NavLink>
 
                       {/* Delete */}
                       <button
@@ -242,11 +398,18 @@ const MyDonationRequests = () => {
               ))
             ) : (
               <tr>
-                <td
-                  colSpan="7"
-                  className="py-10 text-center text-sm text-gray-400"
-                >
-                  No donation requests found.
+                <td colSpan="7" className="py-12 text-center">
+                  <div className="flex flex-col items-center">
+                    <MdBloodtype className="text-4xl text-gray-300" />
+
+                    <p className="mt-2 text-sm font-semibold text-gray-500">
+                      No donation requests found
+                    </p>
+
+                    <p className="mt-1 text-xs text-gray-400">
+                      Your donation requests will appear here.
+                    </p>
+                  </div>
                 </td>
               </tr>
             )}
@@ -264,8 +427,12 @@ const MyDonationRequests = () => {
 const StatusBadge = ({ status }) => {
   const statusStyle = {
     Pending: "bg-yellow-100 text-yellow-600",
+
     "In Progress": "bg-blue-100 text-blue-600",
+
     Done: "bg-green-100 text-green-600",
+
+    Cancelled: "bg-red-100 text-red-600",
   };
 
   return (
@@ -273,7 +440,7 @@ const StatusBadge = ({ status }) => {
       className={`
         inline-flex rounded-full px-3 py-1.5
         text-[10px] font-semibold
-        ${statusStyle[status]}
+        ${statusStyle[status] || "bg-gray-100 text-gray-600"}
       `}
     >
       {status}

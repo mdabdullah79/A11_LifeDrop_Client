@@ -17,6 +17,7 @@ import MyDonationRequests from "../Pages/Home/MyDonationRequests";
 import SearchDonors from "../Pages/Home/SearchDonors";
 import BloodRequests from "../Pages/Home/BloodRequests";
 import DonationRequestDetails from "../Pages/Home/DonationRequestDetails";
+import UpdateDonationRequest from "../Pages/Home/UpdateDonationRequest";
 
 export const router = createBrowserRouter([
   {
@@ -83,6 +84,11 @@ export const router = createBrowserRouter([
       {
         path: "/dashboard/create-donation-request",
         Component: CreateDonationRequest,
+      },
+      {
+        path: "/dashboard/update-donation-request/:id",
+        Component: UpdateDonationRequest
+
       },
       {
         path: "/dashboard/all-users",

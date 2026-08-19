@@ -11,7 +11,6 @@ import axios from "axios";
 import useAxiosSecure from "../../hooks/useAxiosSecure";
 
 function Register() {
-
   const axiosSecure = useAxiosSecure();
 
   const {
@@ -26,7 +25,6 @@ function Register() {
   const password = watch("password");
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
- 
 
   const data = useLoaderData();
 
@@ -42,63 +40,82 @@ function Register() {
     console.log(data);
     const profileImage = data.photo?.[0]; // Get the first file from the FileList
 
-    registerUser(data.email, data.password).then((userCredential) => {
-      // Signed in
-      const user = userCredential.user;
-      console.log("User registered:", user);
+    registerUser(data.email, data.password)
+      .then((userCredential) => {
+        // Signed in
+        const user = userCredential.user;
+        console.log("User registered:", user);
 
-      axiosSecure
-        .post("/users", {
-          email: data.email,
-          name: data.name,
-          bloodGroup: data.bloodGroup,
-          district: data.district,
-          upazila: data.upazila,
-          role: "Donor", // Set the role as "user" for registered users
-          status: "Active", // Set the status as "active" for registered users
-        })
-        .then((response) => {
-          console.log("User added to database:", response.data);
-        })
-        .catch((error) => {
-          console.error("Error adding user to database:", error);
-        });
+        axiosSecure
+          .post("/users", {
+            email: data.email,
+            name: data.name,
+            bloodGroup: data.bloodGroup,
+            district: data.district,
+            upazila: data.upazila,
+            role: "Donor", // Set the role as "user" for registered users
+            status: "Active", // Set the status as "active" for registered users
+          })
+          .then((response) => {
+            console.log("User added to database:", response.data);
+          })
+          .catch((error) => {
+            console.error("Error adding user to database:", error);
+          });
 
-      //1. store the image in form data
-      const formdata = new FormData();
-      formdata.append("image", profileImage);
+        //name update in firebase
+        const userProfile = {
+          displayName: data.name,
+        };
 
-      //2. Upload the image to imgbb
-      const imgbbApiKey = `https://api.imgbb.com/1/upload?expiration=600&key=${import.meta.env.VITE_imagebb_api_key}`;
-      console.log("API KEY:", import.meta.env.VITE_imagebb_api_key);
+        //3. Update the user name in firebase
+        updateUserProfile(userProfile)
+          .then(() => {
+            console.log("User profile updated successfully");
+          })
+          .catch((error) => {
+            console.error("Error updating user profile:", error);
+          });
+      })
+      .catch((error) => {
+        const errorCode = error.code;
+        const errorMessage = error.message;
+        console.error("Error registering user:", errorCode, errorMessage);
+      });
 
-      axios
-        .post(imgbbApiKey, formdata)
-        .then((response) => {
-          console.log("Image uploaded successfully:", response.data);
-          const userProfile = {
-            displayName: data.name,
-            photoURL: response.data.data.url,
-          };
+    //1. store the image in form data
+    const formdata = new FormData();
+    formdata.append("image", profileImage);
 
-          //3. Update the user profile in firebase with the uploaded image URL
-          updateUserProfile(userProfile)
-            .then(() => {
-              console.log("User profile updated successfully");
-            })
-            .catch((error) => {
-              console.error("Error updating user profile:", error);
-            });
-        })
-        .catch((error) => {
-          const errorCode = error.code;
-          const errorMessage = error.message;
-          console.error("Error registering user:", errorCode, errorMessage);
-          console.log("STATUS:", error.response?.status);
-          console.log("IMG BB RESPONSE:", error.response?.data);
-          console.log("MESSAGE:", error.message);
-        });
-    });
+    //2. Upload the image to imgbb
+    const imgbbApiKey = `https://api.imgbb.com/1/upload?expiration=600&key=${import.meta.env.VITE_imagebb_api_key}`;
+    console.log("API KEY:", import.meta.env.VITE_imagebb_api_key);
+
+    axios
+      .post(imgbbApiKey, formdata)
+      .then((response) => {
+        console.log("Image uploaded successfully:", response.data);
+        const userProfile = {
+          photoURL: response.data.data.url,
+        };
+
+        //3. Update the user profile in firebase with the uploaded image URL
+        updateUserProfile(userProfile)
+          .then(() => {
+            console.log("User profile updated successfully");
+          })
+          .catch((error) => {
+            console.error("Error updating user profile:", error);
+          });
+      })
+      .catch((error) => {
+        const errorCode = error.code;
+        const errorMessage = error.message;
+        console.error("Error registering user:", errorCode, errorMessage);
+        console.log("STATUS:", error.response?.status);
+        console.log("IMG BB RESPONSE:", error.response?.data);
+        console.log("MESSAGE:", error.message);
+      });
   };
 
   return (
